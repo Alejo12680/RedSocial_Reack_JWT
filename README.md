@@ -94,7 +94,7 @@ Al instalar las dependencias, automáticamente se añade información al **packa
 
 6. **Instalar la dependencia Validator:** es una librería para validar alguna información. `npm install validator`
 
-7. **Instalar la dependencia bcrypt-nodejs:** es un protocolo de cifrado que permite cifrar contraseñas o cualquier tipo de string o dato. `npm install bcrypt-nodejs`
+7. **Instalar la dependencia bcrypt-nodejs:** es un protocolo de cifrado que permite cifrar contraseñas o cualquier tipo de string o dato. `npm install bcrypt`
 
 8. **Instalar la dependencia jwt-simple:** librería para autenticación con JWT. `npm install jwt-simple`
 
