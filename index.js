@@ -1,7 +1,7 @@
 // Importaciones
-const connection = require("./src/database/connection")
-const express = require("express");
-const cors = require("cors");
+import connection from "./src/database/connection.js";
+import express, { json, urlencoded } from "express";
+import cors from "cors";
 
 // Mensaje de Bienvenida
 console.log("API NODE arriba");
@@ -17,8 +17,8 @@ const puerto = 3900;
 app.use(cors());
 
 // Conversion de datos (body a objetos JS)
-app.use(express.json())
-app.use(express.urlencoded({extends: true}))
+app.use(json())
+app.use(urlencoded({extends: true}))
 
 // Configurar rutas
 app.get('/test-route', (req, res) => {
