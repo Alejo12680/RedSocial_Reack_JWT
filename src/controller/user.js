@@ -2,6 +2,7 @@
 import User from "../models/user.js"
 import bcrypt from "bcrypt";
 import path from "path";
+import { createToken } from "../services/jwt.js";
 
 
 // Acciones de prueba
@@ -72,7 +73,7 @@ export const register = async (req, res) => {
       }
     );
 
-    
+
   } catch (error) {
     console.log("Error en el registro del usuario: ", error);
     return res.status(500).json({
@@ -86,6 +87,7 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
 
   try {
+    // Recoger los parametros del body
     let params = req.body;
 
     // Valida si llega el email y el password
@@ -126,12 +128,28 @@ export const login = async (req, res) => {
       );
     }
 
+    // Generar token de autenticacion 
+    const token = createToken(user);
+
+    // Devolver token generado y los datos del usuario
     return res.status(200).json(
       {
         status: "success",
-        message: "Prueba de login"
+        message: "Login exitoso",
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          last_name: user.last_name,
+          email: user.email,
+          nick: user.nick,
+          role: user.role,
+          image: user.image,
+          created_at: user.created_at,
+        }
       }
     );
+
 
   } catch (error) {
     console.log("Error en el login del usuario", error);
