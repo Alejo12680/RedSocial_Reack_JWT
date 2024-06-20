@@ -5,6 +5,17 @@ import path from "path";
 import { createToken } from "../services/jwt.js";
 
 
+
+// Pruebas****
+/* export const register = (req, res) => {
+  return res.status(200).json(
+    {
+      message: "Registro de Usuario Exitoso",
+      params
+    }
+  )
+} */
+
 // Acciones de prueba
 export const testUser = (req, res) => {
   return res.status(200).send(
@@ -14,8 +25,7 @@ export const testUser = (req, res) => {
   );
 }
 
-
-// Regisro de usuarios
+// Método para Regisro de usuarios
 export const register = async (req, res) => {
 
   try {
@@ -83,7 +93,7 @@ export const register = async (req, res) => {
   }
 }
 
-// Método para autenticar usuario
+// Método para Autenticar usuario
 export const login = async (req, res) => {
 
   try {
@@ -141,6 +151,7 @@ export const login = async (req, res) => {
           id: user._id,
           name: user.name,
           last_name: user.last_name,
+          bio: user.bio,
           email: user.email,
           nick: user.nick,
           role: user.role,
@@ -162,12 +173,123 @@ export const login = async (req, res) => {
   }
 }
 
-// Pruebas****
-/* export const register = (req, res) => {
-  return res.status(200).json(
-    {
-      message: "Registro de Usuario Exitoso",
-      params
+// Metodo para mostrar el perfil del usuario
+export const profile = async (req, res) => {
+
+  try {
+    // Obtener el ID del usuario desde los parametros de la url
+    const userId = req.params.id;
+
+    // Buscar el usuario en la base de datos, excluimos la contraseña, rol y version
+    const user = await User.findById(userId).select('-password -role -__v');
+
+    // Verificar si el usuario existe
+    if (!user) {
+      return res.status(404).send(
+        {
+          status: "error",
+          message: "Usuario no encontrado"
+        }
+      );
     }
-  )
-} */
+
+    // Devolver la informacion del perfil del usuario
+    return res.status(200).json(
+      {
+        status: "success",
+        user
+      }
+    );
+    
+  } catch (error) {
+    console.log("error al obtener el perfil del usuario", error);
+    return res.status(500).send(
+      {
+        status: "error",
+        mesaage: "Error al obtener el perfil del usuario"
+      }
+    );
+    
+  }
+}
+
+// Método para listar usuarios con paginación
+export const listUsers = async (req, res) => {
+
+  try {
+
+    // Controlar en que pagina estamos y el número de items por pagina ternario va ubicar en la pagina 1
+    let page = req.params.page ? parseInt(req.params.page, 10) : 1;
+
+    // Query va traer todo el objeto va ubicar 2 usuarios por pagina
+    let itemsPerPage = req.query.limit ? parseInt(req.query.limit, 10) : 2;
+
+    // Realizar la consulta paginada
+    const options = {
+      page: page,
+      limit: itemsPerPage,
+      // No necesito
+      select: '-password -role -__v'
+    };
+
+    const users = await User.paginate({}, options);
+
+    // Si no hay usuario en la pagina solicitada
+    if (!users || users.docs.length === 0) {
+      return res.status(404).send(
+        {
+          status: "error",
+          message: "No hay usuarios disponibles"
+        }
+      )
+    }
+
+    // Devolver los usuarios paginados
+    return res.status(200).json(
+      {
+        status: "success",
+        users: users.docs,
+        totalDocs: users.totalDocs,
+        totalPages: users.totalPages,
+        page: users.page,
+        pagingCounter: users.pagingCounter,
+        hasPrevPage: users.hasPrevPage,
+        hasNextPage: users.hasNextPage,
+        prevPage: users.prevPage,
+        nextPage: users.nextPage,
+      }
+    );
+    
+  } catch (error) {
+    console.log("error al listar los usuarios", error);
+    return res.status(500).send(
+      {
+        status: "error",
+        mesaage: "Error al listar los usuario"
+      }
+    );
+  }
+}
+
+// Método para actualizar los datos del usuario
+export const updateUSer = async (req, res) => {
+
+  try {
+    return res.status(200).send(
+      {
+        status: "success",
+        message: "Metodo actualizar usuario"
+      }
+    );
+    
+  } catch (error) {
+    console.log("error al actualizar el usuarios", error);
+    return res.status(500).send(
+      {
+        status: "error",
+        mesaage: "Error al listar los usuario"
+      }
+    );
+    
+  }
+}

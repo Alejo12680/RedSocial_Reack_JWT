@@ -1,5 +1,6 @@
 // importaciones
 import { Schema, model } from "mongoose";
+import mongoosePaginate from "mongoose-paginate-v2";
 
 
 const UserSchema = Schema( 
@@ -16,6 +17,9 @@ const UserSchema = Schema(
       type: String,
       require: true
     },
+    
+    bio: String,
+
     email: {
       type: String,
       require: true
@@ -38,6 +42,9 @@ const UserSchema = Schema(
     },
   }
 );
+
+// Añadir pluggin de paginación
+UserSchema.plugin(mongoosePaginate);
 
 // Nombre de la coleccion es "users"
 export default model("User", UserSchema, "users");
