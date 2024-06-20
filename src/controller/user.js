@@ -1,6 +1,7 @@
 // importaaciones
 import User from "../models/user.js"
 import bcrypt from "bcrypt";
+import fs, { exists } from "fs";
 import path from "path";
 import { createToken } from "../services/jwt.js";
 
@@ -200,7 +201,7 @@ export const profile = async (req, res) => {
         user
       }
     );
-    
+
   } catch (error) {
     console.log("error al obtener el perfil del usuario", error);
     return res.status(500).send(
@@ -209,7 +210,7 @@ export const profile = async (req, res) => {
         mesaage: "Error al obtener el perfil del usuario"
       }
     );
-    
+
   }
 }
 
@@ -259,7 +260,7 @@ export const listUsers = async (req, res) => {
         nextPage: users.nextPage,
       }
     );
-    
+
   } catch (error) {
     console.log("error al listar los usuarios", error);
     return res.status(500).send(
@@ -300,8 +301,8 @@ export const updateUSer = async (req, res) => {
     const users = await User.find(
       {
         $or: [
-          {email: userToUpdate.email.toLowerCase() },
-          {nick: userToUpdate.nick.toLowerCase() }
+          { email: userToUpdate.email.toLowerCase() },
+          { nick: userToUpdate.nick.toLowerCase() }
         ]
       }
       // ejecuta la consulta
@@ -324,14 +325,14 @@ export const updateUSer = async (req, res) => {
 
     // Cifrar la contraseña en el caso de que llegue en la actualización
     if (userToUpdate.password) {
-      
+
       try {
         // Encripta el password recopilado
         let pwd = await bcrypt.hash(userToUpdate.password, 10);
-        
+
         // asigna a userToUpDate el password encriptado
         userToUpdate.password = pwd
-        
+
       } catch (hashError) {
         return res.status(500).send(
           {
@@ -348,7 +349,7 @@ export const updateUSer = async (req, res) => {
     }
 
     // Buscar y actualizar el usuario modificado
-    let userUpDated = await User.findByIdAndUpdate(userIdentity.userId, userToUpdate, {new: true});
+    let userUpDated = await User.findByIdAndUpdate(userIdentity.userId, userToUpdate, { new: true });
 
     if (!userUpDated) {
       return res.status(400).send(
@@ -367,13 +368,142 @@ export const updateUSer = async (req, res) => {
         user: userUpDated
       }
     );
-    
+
   } catch (error) {
     console.log("error al actualizar el usuarios", error);
     return res.status(500).send(
       {
         status: "error",
         mesaage: "Error al listar los usuario"
+      }
+    );
+
+  }
+}
+
+// Método para subir imagenes (Avatar - img de perfil)
+export const uploadFiles = async (req, res) => {
+
+  try {
+    // Recoger el archivo de imagen y comprobamos que existe
+    if (!req.file) {
+      return res.status(404).send(
+        {
+          status: "Error",
+          mesaage: "La peticion no incluye la imagen"
+        }
+      );
+    }
+
+    // Conseguir el nombre del archivo 
+    let image = req.file.originalname;
+
+    // Obtener la extensión del archivo y devulve un arreglo
+    const imageSplit = image.split(".");
+    const extension = imageSplit[imageSplit.length - 1];
+
+    // validar la extención que se resiva
+    if (!["png", "jpg", "jpeg", "gif"].includes(extension.toLowerCase())) {
+      // Borrar archivo subido si no es alguna de las extenciones 
+      const filePath = req.file.path;
+      fs.unlinkSync(filePath);
+
+      return res.status(400).send(
+        {
+          status: "Error",
+          message: "Extencion del archivo es inválida"
+        }
+      )
+    }
+
+    // Comprobar tamaño del archivo (pj: maximo 5MB)
+    const fileSize = req.file.size;
+
+    // 5 MB
+    const maxFileSize = 5 * 1024 * 1024;
+    
+    if (fileSize > maxFileSize) {
+      // Borrar archivo subido si se excede de 5MB
+      const filePath = req.file.path;
+      fs.unlinkSync(filePath);
+
+      return res.status(400).send(
+        {
+          status: "Error",
+          message: "El tamaño del archivo se excede de 5MB"
+        }
+      );
+    }
+
+
+    // Guardar la imagen en la BD, bucamos los usuarios por el ID
+    const userUpdated = await User.findOneAndUpdate(
+      { _id: req.user.userId },
+      { image: req.file.filename },
+      { new: true },
+    );
+
+    // Verificamos si la actualización fue exitosa
+    if (!userUpdated) {
+      return res.status(500).send(
+        {
+          status: "success",
+          message: "Error en la subida de la imagen"
+        }
+      );
+    }
+
+    // Devolver respuesta exitosa
+    return res.status(200).send(
+      {
+        status: "success",
+        user: userUpdated,
+        file: req.file
+      }
+    );
+
+  } catch (error) {
+    console.log("error al subir archivos", error);
+    return res.status(500).send(
+      {
+        status: "error",
+        mesaage: "Error al subir archivos usuario"
+      }
+    );
+  }
+}
+
+// Método para mostrar la imagen del perfil (avatar)
+export const avatar = async (req, res) => {
+
+  try {
+    // Obtener el parámetro de la imagen en la url
+    const file = req.params.file;
+
+    // Obtener el path real de la imagen esta guardada en el servidor
+    const filePath = "./uploads/avatars/" + file;
+
+    // Comprobamos si existe
+    fs.stat(filePath, (error, exists) => {
+      if (!exists) {
+        return res.status(404).send(
+          {
+            status: "error",
+            mesaage: "No existe la imagen"
+          }
+        );
+      }
+
+      // Devolver un el archivo 
+      return res.sendFile(path.resolve(filePath));
+    });
+
+  } catch (error) {
+    console.log("error al mostrar la imagen", error);
+    return res.status(500).send(
+      {
+        status: "error",
+        mesaage: "Error al mostrar la imagen"
       }
     );
     
