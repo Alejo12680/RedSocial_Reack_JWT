@@ -275,10 +275,96 @@ export const listUsers = async (req, res) => {
 export const updateUSer = async (req, res) => {
 
   try {
+
+    // Recoger informacion del usuario para actualizar
+    let userIdentity = req.user;
+    let userToUpdate = req.body;
+
+    // validar que los campos necesario estan presentes
+    if (!userToUpdate.email || !userToUpdate.nick) {
+      return res.status(400).send(
+        {
+          status: "Error",
+          mesaage: "Los campos email y nick son requeridos"
+        }
+      )
+    }
+
+    // Eliminar campos sobrantes del objeto user
+    delete userToUpdate.iat;
+    delete userToUpdate.exp;
+    delete userToUpdate.role;
+    delete userToUpdate.image;
+
+    // Comprobar si el usuario ya existe
+    const users = await User.find(
+      {
+        $or: [
+          {email: userToUpdate.email.toLowerCase() },
+          {nick: userToUpdate.nick.toLowerCase() }
+        ]
+      }
+      // ejecuta la consulta
+    ).exec();
+
+    // Verifica si el usuario duplicado y evitar conflicto (variable boleana se escribe "is" al inicio)
+    const isDuplicateUser = users.some(user => {
+      return user && user._id.toString() !== userIdentity.userId
+
+    });
+
+    if (isDuplicateUser) {
+      return res.status(400).send(
+        {
+          status: "Error",
+          mesaage: "Solo se puede modificar los datos a usuarios no duplicado"
+        }
+      )
+    }
+
+    // Cifrar la contraseña en el caso de que llegue en la actualización
+    if (userToUpdate.password) {
+      
+      try {
+        // Encripta el password recopilado
+        let pwd = await bcrypt.hash(userToUpdate.password, 10);
+        
+        // asigna a userToUpDate el password encriptado
+        userToUpdate.password = pwd
+        
+      } catch (hashError) {
+        return res.status(500).send(
+          {
+            status: "error",
+            mesaage: "error al cifrar la contraseña"
+          }
+        );
+      }
+
+      // si no me envio la contraseña se elimina del objeto pero no de la base de datos
+    } else {
+      delete userToUpdate.password;
+
+    }
+
+    // Buscar y actualizar el usuario modificado
+    let userUpDated = await User.findByIdAndUpdate(userIdentity.userId, userToUpdate, {new: true});
+
+    if (!userUpDated) {
+      return res.status(400).send(
+        {
+          status: "error",
+          message: "Error al actualizar el usuario"
+        }
+      );
+    }
+
+    // Devolver respuesta exitosa con el usuario actualizado
     return res.status(200).send(
       {
         status: "success",
-        message: "Metodo actualizar usuario"
+        message: "Usuario actualizado correctamente!",
+        user: userUpDated
       }
     );
     

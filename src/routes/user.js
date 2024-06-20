@@ -15,7 +15,7 @@ router.post('/register', register);
 router.post('/login', login);
 router.get('/profile/:id', ensureAuth, profile);
 router.get('/list/:page?', ensureAuth, listUsers);
-router.get('/update', ensureAuth, updateUSer);
+router.put('/update', ensureAuth, updateUSer);
 
 
 // Exportar el Router
