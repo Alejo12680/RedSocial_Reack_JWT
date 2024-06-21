@@ -2,6 +2,7 @@ import { Schema, model } from "mongoose";
 import mongoosePaginate from 'mongoose-paginate-v2';
 
 
+// El id lo crea la base de datos mongo
 const FollowSchema = Schema(
   {
     following_user: {
