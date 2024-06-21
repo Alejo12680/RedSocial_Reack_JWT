@@ -1,6 +1,6 @@
 // Importaciones siempre va el .js en los archivos
 import { Router } from "express";
-import { saveFollow, testFollow, unfollow } from "../controller/follow.js";
+import { following, saveFollow, testFollow, unfollow } from "../controller/follow.js";
 import { ensureAuth } from "../middlewares/auth.js";
 
 
@@ -10,6 +10,8 @@ const router = Router();
 router.get('/test-follow', testFollow);
 router.post('/follow', ensureAuth, saveFollow);
 router.delete('/unfollow/:id', ensureAuth, unfollow);
+// id opcional y la pagina es opcional
+router.get('/following/:id?/:page?', ensureAuth, following);
 
 
 // Exportar el Router
