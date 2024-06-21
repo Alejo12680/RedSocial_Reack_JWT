@@ -1,4 +1,3 @@
-import follow from "../models/follow.js";
 import Follow from "../models/follow.js"
 
 
@@ -30,7 +29,7 @@ export const followUserIds = async (req, res) => {
     // Procesar array de identificadores: convertirlos en un array de solo IDS
     const user_following = following.map(follow => follow.followed_user);
 
-    const user_follow_me = following.map(follow => follow.following_user);
+    const user_follow_me = followers.map(follow => follow.following_user);
 
     return {
       following: user_following,
