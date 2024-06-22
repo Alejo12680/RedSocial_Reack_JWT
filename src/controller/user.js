@@ -1,9 +1,10 @@
 // importaaciones
 import User from "../models/user.js"
 import bcrypt from "bcrypt";
-import fs, { exists } from "fs";
+import fs from "fs";
 import path from "path";
 import { createToken } from "../services/jwt.js";
+import { followThisUser, followUserIds } from "../services/followService.js";
 
 
 
@@ -181,11 +182,21 @@ export const profile = async (req, res) => {
     // Obtener el ID del usuario desde los parametros de la url
     const userId = req.params.id;
 
+    // Verificar el ID recibido del usuario autenticado existe
+    if (!req.user || !req.user.userId) {
+      return res.status(404).send(
+        {
+          status: "error",
+          message: "Usuario no autenticado"
+        }
+      );
+    }
+
     // Buscar el usuario en la base de datos, excluimos la contraseña, rol y version
-    const user = await User.findById(userId).select('-password -role -__v');
+    const userProfile = await User.findById(userId).select('-password -role -__v');
 
     // Verificar si el usuario existe
-    if (!user) {
+    if (!userProfile) {
       return res.status(404).send(
         {
           status: "error",
@@ -194,11 +205,15 @@ export const profile = async (req, res) => {
       );
     }
 
+    // Mostrar la informacion del seguimiento - (req.user.userId = Id del usuario autenticado)
+    const followInfo = await followThisUser(req.user.userId, userId)
+
     // Devolver la informacion del perfil del usuario
     return res.status(200).json(
       {
         status: "success",
-        user
+        user: userProfile,
+        followInfo
       }
     );
 
@@ -245,6 +260,9 @@ export const listUsers = async (req, res) => {
       )
     }
 
+    // Listar los seguidores de un usuario, obtener el array de IDs de los usuarios que sigo
+    let followUsers = await followUserIds(req);
+
     // Devolver los usuarios paginados
     return res.status(200).json(
       {
@@ -258,6 +276,8 @@ export const listUsers = async (req, res) => {
         hasNextPage: users.hasNextPage,
         prevPage: users.prevPage,
         nextPage: users.nextPage,
+        users_following: followUsers.following,
+        user_follow_me: followUsers.followers
       }
     );
 

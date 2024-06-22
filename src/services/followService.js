@@ -1,6 +1,8 @@
+import { following } from "../controller/follow.js";
 import Follow from "../models/follow.js"
 
 
+// Obtenemos un array de IDs de usuarios que yo sigo y que me siguen
 export const followUserIds = async (req, res) => {
   try {
     // obtener el ID del usuario autenticado
@@ -42,6 +44,49 @@ export const followUserIds = async (req, res) => {
       following: [],
       followers: []
     };
+    
+  }
+}
+
+// Obtenemos datos de Un Usuario que me esta siguiendo a mi o que yo sigo
+export const followThisUser = async (identityUserId, profileUserId) => {
+
+  try {
+    // Verificar si los IDs son válidos
+    if (!identityUserId || !profileUserId) {
+      throw new Error("IDs de los usuarios son inválidos");
+
+    }
+ 
+    // Consultar si yo como usuario identificado ( identityUserID) sigoal otro usuario (profileUSerId)
+    const following = await Follow.findOne(
+      {
+        "following_user": identityUserId,
+        "followed_user": profileUserId
+      }
+    );
+
+    // Consultar si el otro usuario (profileUserId) me sigue a mi o al usuario autenticado (identityUserId)
+    const follower = await Follow.findOne(
+      {
+        "following_user": profileUserId,
+        "followed_user": identityUserId
+      }
+    );
+
+    return {
+      following,
+      follower
+    }
+    
+  } catch (error) {
+    console.log("Error al obtener la informacion de seguimiento", error);
+
+    // Devuelve null si no se sigue
+    return {
+      following: null,
+      follower: null
+    }
     
   }
 }

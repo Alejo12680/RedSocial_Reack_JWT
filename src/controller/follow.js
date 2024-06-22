@@ -241,7 +241,7 @@ export const following = async (req, res) => {
         pages: follows.totalPages,
         page:follows.page,
         limit: follows.limit,
-        user_following: followUsers.following,
+        users_following: followUsers.following,
         user_follow_me: followUsers.followers
       }
     );
@@ -258,3 +258,67 @@ export const following = async (req, res) => {
 }
 
 // Método para listar los usuarios que me siguen
+export const followers = async (req, res) => {
+
+  try {
+    // Obtener el ID del usuario identificado | condicional ternario
+    let userId = req.user && req.user.userId ? req.user.userId : undefined
+
+    // Comprobar si llega el ID por párametro en la Url (este tiene prioridad)
+    if (req.params.id) {      
+      userId = req.params.id;
+
+    }
+
+    // Asignar el número de página Comprobar si el número de página me llega por la Url
+    let page = req.params.page ? parseInt(req.params.page, 10) : 1;
+
+    // Número de usuarios que queremos mostrar por pagina
+    let itemsPerPage = req.query.limit ? parseInt(req.query.limit, 10) : 3;
+
+    // Configurar las opciones de la consulta
+    // Este metodo al final lena() va ayudar a optimizar el documento, con el metodo populate es como un join en SQL
+    const options = {
+      page: page,
+      limit: itemsPerPage,
+      populate: {
+        path: "following_user",
+        select: "-password -role -__V"
+      },
+      lean: true
+    } 
+
+    // Buscar en la BD los seguidores y popular los datos de los usuarios
+    const follows = await Follow.paginate(
+      { followed_user: userId },
+      options
+    );
+
+    // Listar los seguidores de un usuario, obtener el array de IDs de los usuarios que sigo
+    let followUsers = await followUserIds(req);
+    
+    // Devolver respuesta
+    return res.status(200).send(
+      {
+        status: "success",
+        mesaage: "listado de usuarios que me siguen",
+        follows: follows.docs,
+        total: follows.totalDocs,
+        pages: follows.totalPages,
+        page:follows.page,
+        limit: follows.limit,
+        users_following: followUsers.following,
+        user_follow_me: followUsers.followers
+      }
+    );
+
+  } catch (error) {
+    console.log("Error al listar los usuarios que me siguen", error);
+    return res.status(500).send(
+      {
+        status: "error",
+        mesaage: "Error al listar los usuarios que me siguen"
+      }
+    );
+  }
+}
