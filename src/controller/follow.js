@@ -217,7 +217,7 @@ export const following = async (req, res) => {
       limit: itemsPerPage,
       populate: {
         path: "followed_user",
-        select: "-password -role -__V"
+        select: "-password -role -__V -email"
       },
       lean: true
     } 
@@ -283,7 +283,7 @@ export const followers = async (req, res) => {
       limit: itemsPerPage,
       populate: {
         path: "following_user",
-        select: "-password -role -__V"
+        select: "-password -role -__V -email"
       },
       lean: true
     } 
