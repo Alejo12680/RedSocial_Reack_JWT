@@ -84,7 +84,12 @@ export const register = async (req, res) => {
       {
         status: "created",
         menssage: "Usuario registrado con exito",
-        user: user_to_save
+        user: {
+          id: user_to_save.id,
+          name: user_to_save.name,
+          last_name: user_to_save.last_name,
+          nick: user_to_save.nick,
+        }
       }
     );
 
