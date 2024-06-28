@@ -44,7 +44,7 @@ router.post('/upload', [ensureAuth, checkEntityExists(User, 'user_id') , uploads
 // Se quita el enpoint porque no se requiere doble autenticación
 router.get('/avatar/:file', avatar);
 
-router.get('/counter/:id?', ensureAuth, counters);
+router.get('/counters/:id?', ensureAuth, counters);
 
 
 // Exportar el Router
