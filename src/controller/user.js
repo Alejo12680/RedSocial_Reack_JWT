@@ -89,6 +89,7 @@ export const register = async (req, res) => {
           name: user_to_save.name,
           last_name: user_to_save.last_name,
           nick: user_to_save.nick,
+          email: user_to_save.email,
         }
       }
     );
@@ -201,7 +202,7 @@ export const profile = async (req, res) => {
     }
 
     // Buscar el usuario en la base de datos, excluimos la contraseña, rol y version
-    const userProfile = await User.findById(userId).select('-password -role -__v -email');
+    const userProfile = await User.findById(userId).select('-password -role -__v');
 
     // Verificar si el usuario existe
     if (!userProfile) {
